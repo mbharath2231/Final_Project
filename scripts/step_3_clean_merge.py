@@ -142,7 +142,8 @@ def run_salary_upgrade_pipeline():
     rename_map = {
         'search_role': 'Role', 'company.display_name': 'Company',
         'location.display_name': 'Location_Original', 
-        'latitude': 'Latitude', 'longitude': 'Longitude'
+        'latitude': 'Latitude', 'longitude': 'Longitude',
+        'Avg_Salary' : 'Salary'
     }
     
     # Keep and Rename
