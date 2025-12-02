@@ -1,75 +1,92 @@
 import requests
 import pandas as pd
+import time
+import os
 
 ADZUNA_ID = "4754d954"
 ADZUNA_KEY = "ccada37fb80ad1dca86725f13f365a45"
 
-print("First one")
+def fetch_mega_role_data():
+    print("🕵️ STARTING MEGA-ROLE DATA FETCH (9 Categories)...")
+    
+    # 1. THE EXPANDED ROLE LIST
+    roles_to_search = [
+        # Data Family
+        "Data Scientist",
+        "Data Analyst",
+        "Data Engineer",
+        "Machine Learning Engineer",
+        "Business Analyst",
+        
+        # The New Additions
+        "AI Engineer",         # Trending!
+        "DevOps Engineer",     # High demand
+        "Database Engineer",   # Stability
+        "Software Engineer"    # The Baseline
+    ]
+    
+    all_jobs_raw = []
+    
+    # 2. LOOP THROUGH EACH ROLE
+    for role in roles_to_search:
+        print(f"\n🔎 Searching for: {role.upper()}")
+        
+        # Fetch 5 pages per role (50 jobs per role)
+        for page in range(1, 6):
+            url = f"https://api.adzuna.com/v1/api/jobs/us/search/{page}"
+            params = {
+                "app_id": ADZUNA_ID,
+                "app_key": ADZUNA_KEY,
+                "results_per_page": 10,
+                "what": role,
+                "content-type": "application/json"
+            }
+            
+            try:
+                response = requests.get(url, params=params)
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'results' in data:
+                        found_count = len(data['results'])
+                        print(f"   ... Page {page}: Found {found_count} jobs")
+                        
+                        # Tag jobs with the specific role
+                        for job in data['results']:
+                            job['search_role'] = role 
+                            all_jobs_raw.append(job)
+                else:
+                    print(f"   ❌ Error on Page {page}: {response.status_code}")
+                    
+            except Exception as e:
+                print(f"   ❌ Connection failed: {e}")
+            
+            time.sleep(1) # Be polite!
 
-def get_jobs_safely():
-    print("🕵️ Connecting to Adzuna...")
-    
-    url = "https://api.adzuna.com/v1/api/jobs/us/search/1"
-    
-    params = {
-        "app_id": ADZUNA_ID,
-        "app_key": ADZUNA_KEY,
-        "results_per_page": 10,
-        "what": "Data Scientist",
-        "content-type": "application/json"
-    }
-    
-    response = requests.get(url, params=params)
-    
-    if response.status_code == 200:
-        # 1. Get the raw data
-        raw_data = response.json()
+    # 3. SAVE THE MASSIVE DATASET
+    if all_jobs_raw:
+        # Flatten the data
+        df = pd.json_normalize(all_jobs_raw)
         
-        # 2. DEBUG PRINT: Check what we actually got
-        print(f" DataType Received: {type(raw_data)}")
+        # Path Logic
+        current_folder = os.path.dirname(os.path.abspath(__file__))
+        project_folder = os.path.dirname(current_folder)
+        data_folder = os.path.join(project_folder, 'data')
         
-        # 3. Handle the data based on its type
-        jobs_list = []
+        # We overwrite the previous multi file
+        output_path = os.path.join(data_folder, 'raw_jobs_multi.csv')
+        df.to_csv(output_path, index=False)
         
-        if isinstance(raw_data, dict):
-            # Normal behavior: It's a dictionary, look for 'results'
-            if 'results' in raw_data:
-                jobs_list = raw_data['results']
-            else:
-                print("⚠️ Dictionary found, but no 'results' key inside.")
-                print("Keys found:", raw_data.keys())
-                
-        elif isinstance(raw_data, list):
-            # Abnormal behavior: It's already a list (maybe from a different endpoint)
-            jobs_list = raw_data
-            
-        # 4. Check if we found jobs
-        if jobs_list:
-            print(f"✅ Success! Found {len(jobs_list)} jobs.")
-            
-            # Print the first one to prove it works
-            first_job = jobs_list[0]
-            print(f"   Sample: {first_job.get('title')} at {first_job.get('company', {}).get('display_name')}")
-            
-            # Save to CSV
-            df = pd.DataFrame(jobs_list)
-            df.head()
-            # Pick only useful columns if they exist
-            cols = ['title', 'company', 'location', 'salary_min', 'description']
-            # Only select columns that actually exist in the data
-            valid_cols = [c for c in cols if c in df.columns] 
-            print(valid_cols)
-            # Note: Company/Location are often nested dictionaries, so we keep the raw DF for now
-            # to avoid errors. We will clean it in Phase 2.
-            df.to_csv("data/raw_jobs.csv", index=False)
-            print("💾 Saved to data/raw_jobs.csv")
-            
-        else:
-            print("❌ Connection worked, but the list of jobs is empty.")
-            
+        print("\n" + "="*50)
+        print(f"🎉 SUCCESS! Collected {len(df)} total jobs.")
+        print(f"💾 Saved to: {output_path}")
+        print("="*50)
+        
+        # Verification Report
+        print("\n📊 Job Counts by Role:")
+        print(df['search_role'].value_counts())
+        
     else:
-        print(f"❌ Error Code: {response.status_code}")
-        print(response.text)
+        print("❌ No jobs found.")
 
 if __name__ == "__main__":
-    get_jobs_safely()
+    fetch_mega_role_data()
