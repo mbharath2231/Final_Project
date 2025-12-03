@@ -1,0 +1,11 @@
+# Ignore the Virtual Environment (Thousands of useless files)
+job_env/
+venv/
+env/
+
+# Ignore Python Cache
+__pycache__/
+*.pyc
+
+# Ignore Mac System files (if applicable)
+.DS_Store

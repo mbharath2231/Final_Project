@@ -30,20 +30,26 @@ st.markdown("""
 # ---------------------------------------------------------
 # 2. LOAD RESOURCES
 # ---------------------------------------------------------
+
+current_script = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_script)
+data_folder = os.path.join(project_root, 'data')
+models_folder = os.path.join(project_root, 'models')
+
 @st.cache_data
 def load_data():
     # Load the Cleaned Dataset
     # We go up one level from 'app' folder to find 'data'
-    return pd.read_csv("data/cleaned_master_dataset.csv")
+    return pd.read_csv(f"{data_folder}/cleaned_master_dataset.csv")
 
 @st.cache_resource
 def load_models():
     # Load ML Models & Artifacts
-    with open("models/salary_model.pkl", 'rb') as f:
+    with open(f"{models_folder}/salary_model.pkl", 'rb') as f:
         model = pickle.load(f)
-    with open("models/model_columns.pkl", 'rb') as f:
+    with open(f"{models_folder}/model_columns.pkl", 'rb') as f:
         model_cols = pickle.load(f)
-    skills = pd.read_csv("models/top_skills.csv")
+    skills = pd.read_csv(f"{models_folder}/top_skills.csv")
     return model, model_cols, skills
 
 # try:
