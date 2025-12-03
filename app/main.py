@@ -36,6 +36,8 @@ project_root = os.path.dirname(current_script)
 data_folder = os.path.join(project_root, 'data')
 models_folder = os.path.join(project_root, 'models')
 
+print(data_folder)
+
 @st.cache_data
 def load_data():
     # Load the Cleaned Dataset
