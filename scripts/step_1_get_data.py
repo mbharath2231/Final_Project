@@ -31,8 +31,8 @@ def fetch_mega_role_data():
     for role in roles_to_search:
         print(f"\n🔎 Searching for: {role.upper()}")
         
-        # Fetch 5 pages per role (50 jobs per role)
-        for page in range(1, 6):
+        # Fetch 10 pages per role (100 jobs per role)
+        for page in range(1, 11):
             url = f"https://api.adzuna.com/v1/api/jobs/us/search/{page}"
             params = {
                 "app_id": ADZUNA_ID,

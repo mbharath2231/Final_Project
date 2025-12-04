@@ -56,8 +56,9 @@ dataset_context = {
 # ---------------------------------------------------------
 current_script = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_script)
-app_folder = os.path.dirname(project_root)
-data_folder = os.path.join(app_folder, 'data')
+data_folder = os.path.join(project_root, 'data')
+
+print("DAta", data_folder)
 
 @st.cache_data
 def load_all_data():

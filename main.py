@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
+import pydeck as pdk
 import os
 
 # ---------------------------------------------------------
@@ -32,10 +33,11 @@ st.markdown("""
 # ---------------------------------------------------------
 
 current_script = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(current_script)
-data_folder = os.path.join(project_root, 'data')
-models_folder = os.path.join(project_root, 'models')
+# project_root = os.path.dirname(current_script)
+data_folder = os.path.join(current_script, 'data')
+models_folder = os.path.join(current_script, 'models')
 
+print("Current", current_script)
 print(data_folder)
 
 @st.cache_data
@@ -120,6 +122,8 @@ if not metrics_df.empty:
     
     st.divider()
 
+# ... inside Home.py ...
+
 # B. VISUALIZATIONS (Middle Row)
 # ---------------------------------------
 col_left, col_right = st.columns([2, 1])
@@ -127,13 +131,50 @@ col_left, col_right = st.columns([2, 1])
 with col_left:
     st.subheader(f"📍 Map: Where are the {selected_role} jobs?")
     
-    # Map needs valid coordinates
+    # 1. Filter valid data
     map_data = role_df.dropna(subset=['Latitude', 'Longitude'])
     
-    if not map_data.empty:
-        st.map(map_data, latitude='Latitude', longitude='Longitude', size=20, color='#0044ff')
+    # 2. DEBUG: Check if we actually have data
+    if map_data.empty:
+        st.warning("No GPS data available. (Try running the pipeline again!)")
     else:
-        st.warning("No location data available for this role to plot on map.")
+        # Display the count so you know it's working
+        st.caption(f"Plotting {len(map_data)} locations...")
+
+        # 3. Define the Map Layer
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=map_data,
+            get_position='[Longitude, Latitude]', # This string syntax is correct for PyDeck
+            get_color=[0, 100, 255, 160],         # <--- FIX: Removed quotes (Must be a List, not String)
+            get_radius=25000,                     # Radius in meters (25km)
+            pickable=True,                        # Enables Hover
+            auto_highlight=True
+        )
+
+        # 4. Set the Initial View
+        view_state = pdk.ViewState(
+            latitude=38.0,
+            longitude=-96.0,
+            zoom=3,
+            pitch=0,
+        )
+
+        # 5. Render
+        st.pydeck_chart(pdk.Deck(
+            map_style=None, # <--- FIX: 'None' uses Streamlit's default theme (Safest option)
+            initial_view_state=view_state,
+            layers=[layer],
+            tooltip={
+                "html": "<b>City:</b> {City_Key}<br/>"
+                        "<b>Avg Salary:</b> ${Salary}<br/>"
+                        "<b>Real Wage:</b> ${Real_Wage}",
+                "style": {
+                    "backgroundColor": "steelblue",
+                    "color": "white"
+                }
+            }
+        ))
 
 with col_right:
     st.subheader("🧠 Top Value Skills")
