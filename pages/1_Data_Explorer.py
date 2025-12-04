@@ -98,7 +98,7 @@ st.title(f"📊 Explorer: {selected_name.split(' ')[1:]}")
 st.info(dataset_context.get(selected_name, ""))
 st.caption(f"Dimensions: {df.shape[0]:,} rows × {df.shape[1]} columns")
 
-tab1, tab2, tab3, tab4 = st.tabs(["📄 Raw Data", "📈 Statistics", "🔍 Data Quality", "Advanced Analysis"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📄 Raw Data", "📈 Statistics", "🔍 Data Quality", "Advanced Analysis", "Model Evaluation"])
 
 # --- TAB 1: RAW DATA ---
 with tab1:
@@ -237,3 +237,20 @@ with tab4:
 
     else:
         st.info("Select the **Final Cleaned Master** dataset to see advanced analytics.")
+    
+    # In app/pages/1_📊_Data_Explorer.py
+# ... inside the tabs ...
+
+with tab5: # or a new tab
+    st.subheader("🤖 Model Evaluation Metrics")
+    st.caption("Visual proof of the Machine Learning model's accuracy on unseen data.")
+    
+    # Load the image we just generated
+    import os
+    # Go up to project root to find models folder
+    model_img_path = "models/model_performance.png"
+    
+    if os.path.exists(model_img_path):
+        st.image(model_img_path, caption="Predicted vs. Actual Salary (Linearity indicates accuracy)", use_container_width=True)
+    else:
+        st.warning("Model performance chart not found. Run '04_train_models.py' again.")

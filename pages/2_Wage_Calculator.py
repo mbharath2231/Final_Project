@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 import pickle
 import pydeck as pdk
+import plotly.express as px
 import os
+
 
 # ---------------------------------------------------------
 # 1. APP CONFIGURATION
@@ -33,9 +35,9 @@ st.markdown("""
 # ---------------------------------------------------------
 
 current_script = os.path.dirname(os.path.abspath(__file__))
-# project_root = os.path.dirname(current_script)
-data_folder = os.path.join(current_script, 'data')
-models_folder = os.path.join(current_script, 'models')
+project_root = os.path.dirname(current_script)
+data_folder = os.path.join(project_root, 'data')
+models_folder = os.path.join(project_root, 'models')
 
 print("Current", current_script)
 print(data_folder)
@@ -189,10 +191,10 @@ with col_right:
 
 st.divider()
 
-# C. THE AI PREDICTOR (Interactive Tool)
+# C. THE PREDICTOR (Interactive Tool)
 # ---------------------------------------
-st.subheader("🤖 AI Salary Predictor")
-st.info("Select a city below, and our AI will predict your salary based on market trends.")
+st.subheader("🤖 Salary Predictor")
+st.info("Select a city below, and our App will predict your salary based on market trends.")
 
 with st.form("predict_form"):
     c1, c2 = st.columns(2)
@@ -245,3 +247,72 @@ with st.expander("📄 View Raw Job Listings"):
         .sort_values('Real_Wage', ascending=False)
         .rename(columns={'Location_Original': 'Location'}) # Rename it just for the UI!
     )
+
+# ---------------------------------------------------------
+# 9. INTERACTIVE MODEL EVALUATION (The "A-Grade" Visuals)
+# ---------------------------------------------------------
+with st.expander("📊 Technical Evaluation (Model Diagnostics)", expanded=False):
+    st.subheader("Model Battle: Linear Regression vs. Random Forest")
+    st.caption("We trained two models and challenged them on unseen test data. Here are the results.")
+    
+    # 1. Load Data
+    try:
+        with open("models/model_comparison.pkl", 'rb') as f: 
+            metrics = pickle.load(f)
+        eval_df = pd.read_csv("models/test_predictions.csv")
+        
+        # 2. Create Tabs for different views
+        tab_metrics, tab_scatter = st.tabs(["🏆 Performance Metrics", "🎯 Prediction Accuracy"])
+        
+        # --- TAB A: METRICS BAR CHART ---
+        with tab_metrics:
+            # Prepare data for Plotly
+            models = ["Linear Regression", "Random Forest"]
+            r2_scores = [metrics["Linear Regression"]["R²"], metrics["Random Forest"]["R²"]]
+            mae_scores = [metrics["Linear Regression"]["MAE"], metrics["Random Forest"]["MAE"]]
+            
+            # Create a colorful bar chart
+            fig_metrics = px.bar(
+                x=models, 
+                y=r2_scores, 
+                title="Model Accuracy (R² Score)",
+                labels={'x': 'Model', 'y': 'R² Score (Higher is Better)'},
+                color=models,
+                color_discrete_sequence=['#3b82f6', '#10b981'],
+                text_auto='.2%'
+            )
+            fig_metrics.update_layout(showlegend=False, height=300)
+            st.plotly_chart(fig_metrics, use_container_width=True)
+            
+            st.success(f"**Winner:** The **{metrics['Winner']}** is the active model for predictions.")
+
+        # --- TAB B: ACTUAL VS PREDICTED SCATTER ---
+        with tab_scatter:
+            st.markdown("##### The 'Truth' Test")
+            st.caption("Each dot represents a real job from our test set. If the model was perfect, all dots would land exactly on the red diagonal line.")
+            
+            # User chooses which model to inspect
+            model_choice = st.radio("Select Model Trace:", ["Forest_Prediction", "Linear_Prediction"], horizontal=True, format_func=lambda x: "Random Forest" if "Forest" in x else "Linear Regression")
+            
+            # Interactive Scatter Plot
+            fig_scatter = px.scatter(
+                eval_df,
+                x="Actual_Salary",
+                y=model_choice,
+                opacity=0.6,
+                title=f"Actual vs. Predicted Salary ({model_choice.split('_')[0]})",
+                labels={'Actual_Salary': 'Actual Salary ($)', model_choice: 'Predicted Salary ($)'},
+                color_discrete_sequence=['#00cc99'] # Matrix Green
+            )
+            
+            # Add a perfect prediction line (y=x)
+            fig_scatter.add_shape(
+                type="line", line=dict(dash='dash', color='red'),
+                x0=eval_df['Actual_Salary'].min(), y0=eval_df['Actual_Salary'].min(),
+                x1=eval_df['Actual_Salary'].max(), y1=eval_df['Actual_Salary'].max()
+            )
+            
+            st.plotly_chart(fig_scatter, use_container_width=True)
+            
+    except FileNotFoundError:
+        st.warning("⚠️ Metrics not found. Please run 'python scripts/04_train_models.py' first.")
