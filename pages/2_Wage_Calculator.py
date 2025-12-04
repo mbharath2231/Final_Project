@@ -84,7 +84,7 @@ with st.sidebar:
     default_try = ["new york", "austin", "san francisco"]
     defaults = [c for c in default_try if c in available_cities]
     
-    selected_cities = st.multiselect("Compare Cities", available_cities, default=defaults)
+    selected_cities = st.selectone("Choose City", available_cities, default=defaults)
     
     st.divider()
     st.caption(f"Analyzing {len(role_df)} jobs for {selected_role}")
