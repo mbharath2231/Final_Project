@@ -27,19 +27,6 @@ with col1:
     This application is a **Decision Support System** that scrapes live market data, integrates economic risk factors, and uses Machine Learning to predict the *true* value of a job offer.
     """)
 
-with col2:
-    st.info("""
-    **👨‍💻 Developer:** Bharath
-    **🎓 Course:** CMSE 830
-    **📅 Date:** Fall 2025
-    
-    **Tech Stack:**
-    * 🐍 Python
-    * 🤖 Scikit-Learn 
-    * 📊 Plotly & PyDeck
-    * 🌐 Streamlit
-    """)
-
 st.divider()
 
 # 4. DATA PIPELINE VISUALIZATION
@@ -102,6 +89,6 @@ st.divider()
 
 st.markdown("""
 <div style="text-align: center; color: grey;">
-    <i>Built with ❤️ for the CMSE 830 Final Project</i>
+    <i>Built with ❤️ for the STT 811 Final Project</i>
 </div>
 """, unsafe_allow_html=True)

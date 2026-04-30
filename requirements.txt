@@ -8,3 +8,4 @@ seaborn
 thefuzz
 plotly
 statsmodels
+pydeck

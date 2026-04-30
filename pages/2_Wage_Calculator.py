@@ -265,26 +265,31 @@ with st.expander("📊 Technical Evaluation (Model Diagnostics)", expanded=False
         tab_metrics, tab_scatter = st.tabs(["🏆 Performance Metrics", "🎯 Prediction Accuracy"])
         
         # --- TAB A: METRICS BAR CHART ---
+        # --- TAB A: METRICS BAR CHART ---
         with tab_metrics:
-            # Prepare data for Plotly
-            models = ["Linear Regression", "Random Forest"]
-            r2_scores = [metrics["Linear Regression"]["R²"], metrics["Random Forest"]["R²"]]
-            mae_scores = [metrics["Linear Regression"]["MAE"], metrics["Random Forest"]["MAE"]]
+            # 1. Dynamically read all models from the dictionary (ignoring the 'Winner' key)
+            model_names = [k for k in metrics.keys() if k != "Winner"]
+            r2_scores = [metrics[m]["R²"] for m in model_names]
             
-            # Create a colorful bar chart
+            # 2. Create a colorful 3-bar chart
             fig_metrics = px.bar(
-                x=models, 
+                x=model_names, 
                 y=r2_scores, 
-                title="Model Accuracy (R² Score)",
-                labels={'x': 'Model', 'y': 'R² Score (Higher is Better)'},
-                color=models,
-                color_discrete_sequence=['#3b82f6', '#10b981'],
-                text_auto='.2%'
+                title="Model Accuracy (R² Score) - The 3-Way Battle",
+                labels={'x': 'Algorithm', 'y': 'R² Score (Higher is Better)'},
+                color=model_names,
+                color_discrete_sequence=['#fbbf24', '#3b82f6', '#10b981'], # Yellow, Blue, Green
+                text_auto='.2f' # Shows the exact decimal on the bar
             )
-            fig_metrics.update_layout(showlegend=False, height=300)
+            
+            fig_metrics.update_layout(showlegend=False, height=350)
+            
+            # 3. Add a realistic baseline threshold line
+            fig_metrics.add_hline(y=0.60, line_dash="dot", annotation_text="Good Real-World Baseline (0.60)", annotation_position="bottom right")
+            
             st.plotly_chart(fig_metrics, use_container_width=True)
             
-            st.success(f"**Winner:** The **{metrics['Winner']}** is the active model for predictions.")
+            st.info(f"**Insight:** Our hand-coded Custom KNN establishes a mathematical baseline. The **{metrics['Winner']}** outperformed it by capturing complex, non-linear relationships between tech skills and location.")
 
         # --- TAB B: ACTUAL VS PREDICTED SCATTER ---
         with tab_scatter:
@@ -292,7 +297,13 @@ with st.expander("📊 Technical Evaluation (Model Diagnostics)", expanded=False
             st.caption("Each dot represents a real job from our test set. If the model was perfect, all dots would land exactly on the red diagonal line.")
             
             # User chooses which model to inspect
-            model_choice = st.radio("Select Model Trace:", ["Forest_Prediction", "Linear_Prediction"], horizontal=True, format_func=lambda x: "Random Forest" if "Forest" in x else "Linear Regression")
+            # Change this line in your Streamlit code (around line 202)
+            model_choice = st.radio(
+                "Select Model Trace:", 
+                ["Forest_Prediction", "Linear_Prediction", "Custom_KNN_Prediction"], # Added KNN
+                horizontal=True, 
+                format_func=lambda x: "Random Forest (Tuned)" if "Forest" in x else ("Linear Regression" if "Linear" in x else "Hand-Coded KNN")
+            )
             
             # Interactive Scatter Plot
             fig_scatter = px.scatter(
